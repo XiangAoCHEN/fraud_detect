@@ -61,6 +61,8 @@ class GBDTCatBoost:
                 print(key, value, file=f)
 
     def train_val_test_split(self, X, y, train_mask, val_mask, test_mask):
+        # print('train_mask', train_mask)
+        # print(type(X))
         X_train, y_train = X.iloc[train_mask], y.iloc[train_mask]
         X_val, y_val = X.iloc[val_mask], y.iloc[val_mask]
         X_test, y_test = X.iloc[test_mask], y.iloc[test_mask]

@@ -1,0 +1,24 @@
+Collecting torchdata
+  Downloading torchdata-0.7.1-py3-none-any.whl.metadata (13 kB)
+Requirement already satisfied: urllib3>=1.25 in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from torchdata) (2.2.2)
+Requirement already satisfied: requests in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from torchdata) (2.32.3)
+Requirement already satisfied: torch>=2 in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from torchdata) (2.4.0)
+Requirement already satisfied: filelock in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from torch>=2->torchdata) (3.13.1)
+Requirement already satisfied: typing-extensions>=4.8.0 in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from torch>=2->torchdata) (4.11.0)
+Requirement already satisfied: sympy in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from torch>=2->torchdata) (1.12)
+Requirement already satisfied: networkx in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from torch>=2->torchdata) (3.3)
+Requirement already satisfied: jinja2 in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from torch>=2->torchdata) (3.1.4)
+Collecting fsspec (from torch>=2->torchdata)
+  Downloading fsspec-2024.6.1-py3-none-any.whl.metadata (11 kB)
+Requirement already satisfied: setuptools in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from torch>=2->torchdata) (69.5.1)
+Requirement already satisfied: charset-normalizer<4,>=2 in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from requests->torchdata) (3.3.2)
+Requirement already satisfied: idna<4,>=2.5 in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from requests->torchdata) (3.7)
+Requirement already satisfied: certifi>=2017.4.17 in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from requests->torchdata) (2024.7.4)
+Requirement already satisfied: MarkupSafe>=2.0 in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from jinja2->torch>=2->torchdata) (2.1.3)
+Requirement already satisfied: mpmath>=0.19 in /home/cxa/anaconda3/envs/eth_fraud_detect/lib/python3.12/site-packages (from sympy->torch>=2->torchdata) (1.3.0)
+Downloading torchdata-0.7.1-py3-none-any.whl (184 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 184.4/184.4 kB 15.7 MB/s eta 0:00:00
+Downloading fsspec-2024.6.1-py3-none-any.whl (177 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 177.6/177.6 kB 31.0 MB/s eta 0:00:00
+Installing collected packages: fsspec, torchdata
+Successfully installed fsspec-2024.6.1 torchdata-0.7.1

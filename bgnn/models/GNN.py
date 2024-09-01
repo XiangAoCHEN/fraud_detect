@@ -11,7 +11,7 @@ from tqdm import tqdm
 from .Base import BaseModel
 from torch.autograd import Variable
 from collections import defaultdict as ddict
-from .MLP import MLPRegressor
+# from .MLP import MLPRegressor
 
 
 class ElementWiseLinear(nn.Module):
@@ -131,7 +131,7 @@ class GNNModelDGL(torch.nn.Module):
         self.join_with_mlp = join_with_mlp
         self.normalize_input_columns = True
         if use_mlp:
-            self.mlp = MLPRegressor(in_dim, hidden_dim, out_dim)
+            # self.mlp = MLPRegressor(in_dim, hidden_dim, out_dim)
             if join_with_mlp:
                 in_dim += out_dim
             else:

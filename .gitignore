@@ -1,3 +1,4 @@
 eth_dataset/
 eth_dataset.zip
-node_total.csv
+catboost_info/
+results/

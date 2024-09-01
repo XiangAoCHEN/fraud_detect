@@ -3,7 +3,7 @@
 # sys.path.append('../')
 
 from bgnn.models.GBDT import GBDTCatBoost, GBDTLGBM
-from bgnn.models.MLP import MLP
+# from bgnn.models.MLP import MLP
 from bgnn.models.GNN import GNN
 from bgnn.models.BGNN import BGNN
 from bgnn.scripts.utils import NpEncoder
@@ -26,16 +26,25 @@ from sklearn.model_selection import ParameterGrid
 
 class RunModel:
     def read_input(self, input_folder):
-        self.X = pd.read_csv(f'{input_folder}/X.csv')
-        self.y = pd.read_csv(f'{input_folder}/y.csv')
+        print("## input_folder:", input_folder)
+        current_path = os.getcwd()
+        x_path = os.path.join(current_path, input_folder, 'x.csv')
+        y_path = os.path.join(current_path, input_folder, 'y.csv')
+        self.X = pd.read_csv(x_path)
+        self.y = pd.read_csv(y_path)
 
-        networkx_graph = nx.read_graphml(f'{input_folder}/graph.graphml')
+        print("## read graphml")
+        graph_path = os.path.join(current_path, input_folder, 'graph.graphml')
+        networkx_graph = nx.read_graphml(graph_path)
         networkx_graph = nx.relabel_nodes(networkx_graph, {str(i): i for i in range(len(networkx_graph))})
         self.networkx_graph = networkx_graph
 
+        
         categorical_columns = []
-        if os.path.exists(f'{input_folder}/cat_features.txt'):
-            with open(f'{input_folder}/cat_features.txt') as f:
+        cat_features_path = os.path.join(current_path, input_folder, 'cat_features.txt')# category feature
+        if os.path.exists(cat_features_path):
+            print("## read cat_features")
+            with open(cat_features_path) as f:
                 for line in f:
                     if line.strip():
                         categorical_columns.append(line.strip())
@@ -49,7 +58,9 @@ class RunModel:
                 self.X[col] = self.X[col].astype(str)
 
 
-        if os.path.exists(f'{input_folder}/masks.json'):
+        print("## read masks")
+        masks_path = os.path.join(current_path, input_folder, 'masks.json')
+        if os.path.exists(masks_path):
             with open(f'{input_folder}/masks.json') as f:
                 self.masks = json.load(f)
         else:
@@ -66,39 +77,43 @@ class RunModel:
 
 
     def get_input(self, dataset_dir, dataset: str):
-        if dataset == 'house':
-            input_folder = dataset_dir / 'house'
-        elif dataset == 'county':
-            input_folder = dataset_dir / 'county'
-        elif dataset == 'vk':
-            input_folder = dataset_dir / 'vk'
-        elif dataset == 'wiki':
-            input_folder = dataset_dir / 'wiki'
-        elif dataset == 'avazu':
-            input_folder = dataset_dir / 'avazu'
-        elif dataset == 'vk_class':
-            input_folder = dataset_dir / 'vk_class'
-        elif dataset == 'house_class':
-            input_folder = dataset_dir / 'house_class'
-        elif dataset == 'dblp':
-            input_folder = dataset_dir / 'dblp'
-        elif dataset == 'slap':
-            input_folder = dataset_dir / 'slap'
-        elif dataset == 'eth':
-            input_folder = dataset_dir / 'eth'
-        else:
-            input_folder = dataset
+        # if dataset == 'house':
+        #     input_folder = dataset_dir / 'house'
+        # elif dataset == 'county':
+        #     input_folder = dataset_dir / 'county'
+        # elif dataset == 'vk':
+        #     input_folder = dataset_dir / 'vk'
+        # elif dataset == 'wiki':
+        #     input_folder = dataset_dir / 'wiki'
+        # elif dataset == 'avazu':
+        #     input_folder = dataset_dir / 'avazu'
+        # elif dataset == 'vk_class':
+        #     input_folder = dataset_dir / 'vk_class'
+        # elif dataset == 'house_class':
+        #     input_folder = dataset_dir / 'house_class'
+        # elif dataset == 'dblp':
+        #     input_folder = dataset_dir / 'dblp'
+        # elif dataset == 'slap':
+        #     input_folder = dataset_dir / 'slap'
+        # elif dataset == 'eth':
+        #     input_folder = dataset_dir / 'eth'
+        # else:
+        #     input_folder = dataset
 
         if self.save_folder is None:
             self.save_folder = f'results/{dataset}/{datetime.datetime.now().strftime("%d_%m")}'
 
-        self.read_input(input_folder)
+        # self.read_input(input_folder)
+        self.read_input(dataset_dir)
         print('Save to folder:', self.save_folder)
 
 
     def run_one_model(self, config_fn, model_name):
+        print("run_one_model, config_fn=", config_fn)
         self.config = OmegaConf.load(config_fn)
         grid = ParameterGrid(dict(self.config.hp))
+
+        print(len(grid))
 
         for ps in grid:
             param_string = ''.join([f'-{key}{ps[key]}' for key in ps])
@@ -136,8 +151,8 @@ class RunModel:
             return GBDTCatBoost(self.task, **ps)
         elif model_name == 'lightgbm':
             return GBDTLGBM(self.task, **ps)
-        elif model_name == 'mlp':
-            return MLP(self.task, **ps)
+        # elif model_name == 'mlp':
+        #     return MLP(self.task, **ps)
         elif model_name == 'gnn':
             return GNN(self.task, **ps)
         elif model_name == 'resgnn':
@@ -175,9 +190,9 @@ class RunModel:
         else:
             model_name = ''
 
-        # get a model used a MLP (eg. MLP-GNN)
-        if 'gnn' in exp_name and 'mlpTrue' in exp_name:
-            model_name += '-MLP'
+        # # get a model used a MLP (eg. MLP-GNN)
+        # if 'gnn' in exp_name and 'mlpTrue' in exp_name:
+        #     model_name += '-MLP'
 
         # algo corresponds to type of the model (eg. gnn, resgnn, bgnn)
         for algo in algos:
@@ -186,7 +201,7 @@ class RunModel:
         return 'unknown'
 
     def aggregate_results(self):
-        algos = ['catboost', 'lightgbm', 'mlp', 'gnn', 'resgnn', 'bgnn']
+        algos = ['catboost', 'lightgbm', 'gnn', 'resgnn', 'bgnn']
         model_best_score = ddict(list)
         model_best_time = ddict(list)
 
@@ -237,20 +252,23 @@ class RunModel:
         self.get_input(dataset_dir, dataset)
 
         self.seed_results = dict()
+        print(type(self.masks), len(self.masks))
         for ix, seed in enumerate(self.masks):
-            print(f'{dataset} Seed {seed}')
+            print(f'{dataset} Seed {seed}') # 模型用的random_seed的序号id
             self.seed = seed
 
             self.create_save_folder(seed)
             self.split_masks(seed)
 
             self.store_results = dict()
+
+            print("## args:", args)
             for arg in args:
                 if arg == 'all':
                     self.run_one_model(config_fn=config_dir / 'catboost.yaml', model_name="catboost")
-                    self.run_one_model(config_fn=config_dir / 'lightgbm.yaml', model_name="lightgbm")
-                    self.run_one_model(config_fn=config_dir / 'mlp.yaml', model_name="mlp")
-                    self.run_one_model(config_fn=config_dir / 'gnn.yaml', model_name="gnn")
+                    # self.run_one_model(config_fn=config_dir / 'lightgbm.yaml', model_name="lightgbm")
+                    # self.run_one_model(config_fn=config_dir / 'mlp.yaml', model_name="mlp")
+                    # self.run_one_model(config_fn=config_dir / 'gnn.yaml', model_name="gnn")
                     self.run_one_model(config_fn=config_dir / 'resgnn.yaml', model_name="resgnn")
                     self.run_one_model(config_fn=config_dir / 'bgnn.yaml', model_name="bgnn")
                     break
@@ -258,8 +276,8 @@ class RunModel:
                     self.run_one_model(config_fn=config_dir / 'catboost.yaml', model_name="catboost")
                 elif arg == 'lightgbm':
                     self.run_one_model(config_fn=config_dir / 'lightgbm.yaml', model_name="lightgbm")
-                elif arg == 'mlp':
-                    self.run_one_model(config_fn=config_dir / 'mlp.yaml', model_name="mlp")
+                # elif arg == 'mlp':
+                #     self.run_one_model(config_fn=config_dir / 'mlp.yaml', model_name="mlp")
                 elif arg == 'gnn':
                     self.run_one_model(config_fn=config_dir / 'gnn.yaml', model_name="gnn")
                 elif arg == 'resgnn':
@@ -274,4 +292,11 @@ class RunModel:
         print(f'Finished {dataset}: {time.time() - start2run} sec.')
 
 if __name__ == '__main__':
-    fire.Fire(RunModel().run)
+    # fire.Fire(RunModel().run(dataset='eth',dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f'))
+    # fire.Fire(RunModel().run(dataset='eth'))
+    RunModel().run('eth',"all", repeat_exp=3, max_seeds=3,dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f_all')
+    # RunModel().run('eth',"bgnn", repeat_exp=3, max_seeds=3,dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f_bgnn')
+
+    # RunModel().run('eth',"resgnn", repeat_exp=3, max_seeds=3,dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f_resgnn')
+    # RunModel().run('eth',"catboost", repeat_exp=3, max_seeds=3,dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f_catboost')
+    # RunModel().run('eth',"lightgbm", repeat_exp=3, max_seeds=3,dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f_lightgbm')

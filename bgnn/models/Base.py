@@ -53,6 +53,8 @@ class BaseModel(torch.nn.Module):
 
     def normalize_features(self, X, train_mask, val_mask, test_mask):
         min_max_scaler = preprocessing.MinMaxScaler()
+        # print(type(X))
+        # print(X.head())
         A = X.to_numpy(copy=True)
         A[train_mask] = min_max_scaler.fit_transform(A[train_mask])
         A[val_mask + test_mask] = min_max_scaler.transform(A[val_mask + test_mask])
@@ -105,6 +107,13 @@ class BaseModel(torch.nn.Module):
             elif self.task == 'classification':
                 metrics['loss'] = F.cross_entropy(pred, y.long())
                 metrics['accuracy'] = torch.Tensor([(y == pred.max(1)[1]).sum().item()/y.shape[0]])
+
+                # Calculate recall
+                pred_labels = pred.max(1)[1]
+                true_positives = ((pred_labels == 1) & (y == 1)).sum().item()
+                actual_positives = (y == 1).sum().item()
+                recall = true_positives / actual_positives if actual_positives > 0 else 0.0
+                metrics['recall'] = torch.Tensor([recall])
 
             return metrics
 
