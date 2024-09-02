@@ -3,6 +3,9 @@ import dask.dataframe as dd
 import networkx as nx
 import numpy as np
 
+float64_max = np.finfo(np.float64).max
+int64_max = np.iinfo(np.int64).max
+
 
 # Load node and edge data
 # 0 account_id,fraud_label,
@@ -75,12 +78,12 @@ def check_integrity(df, name:str):
     print(f"{len(inf_columns)} columns with inf values:")
     print(", ".join(inf_columns))
     # Check for -inf values
-    minus_inf_values = node_df.map_partitions(lambda df: df.isin([-np.inf]).any()).compute()
+    minus_inf_values = df.map_partitions(lambda df: df.isin([-np.inf]).any()).compute()
     minus_inf_columns = list(set(minus_inf_values[minus_inf_values].index.tolist()))
     print(f"\n\n{len(minus_inf_columns)} columns with -inf values:")
     print(", ".join(minus_inf_columns))
     # Check for NA values
-    na_values = node_df.isna().compute()
+    na_values = df.isna().compute()
     na_columns = list(set(na_values.columns[na_values.isna().any()].tolist()))
     print(f"\n\n{len(na_columns)} columns with NA values:")
     print(", ".join(na_columns))
@@ -135,8 +138,7 @@ na_replacement_values_node = {
 }
 
 
-float64_max = np.finfo(np.float64).max
-int64_max = np.iinfo(np.int64).max
+
 inf_relacement_values_node ={
     'send_amount_max': float64_max,
     'send_amount_min': float64_max,
@@ -245,6 +247,10 @@ print("Node data saved to ", new_node_file)
 # 0 txn_hash,nonce,block_hash,block_number,transaction_index,
 # 5 from,to,value,gas,gas_price,input,
 # 11 block_timestamp,cumulative_gas_used
+columns = [
+    'txn_hash', 'nonce', 'block_hash', 'block_number', 'transaction_index',
+    'from', 'to', 'value', 'gas', 'gas_price', 'input', 'block_timestamp', 'cumulative_gas_used'
+]
 edge_dtypes = {
     'txn_hash': 'object',
     'nonce': 'int64', # a transaction counter of from account
@@ -260,7 +266,13 @@ edge_dtypes = {
     'block_timestamp': 'int64',
     'cumulative_gas_used': 'float64'
 }
-edge_df = dd.read_csv('../eth_dataset/edge_total.csv', dtype=edge_dtypes)
+print("loading edge csv")
+edge_df = dd.read_csv(
+    '../eth_dataset/edge_total.csv',
+    names=columns,  # 手动指定列名
+    dtype=edge_dtypes,
+    header=None  # 指定文件没有列头
+)
 
 inf_columns, minus_inf_columns, na_columns = check_integrity(edge_df, "edge_df")
 

@@ -294,9 +294,10 @@ class RunModel:
 if __name__ == '__main__':
     # fire.Fire(RunModel().run(dataset='eth',dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f'))
     # fire.Fire(RunModel().run(dataset='eth'))
-    RunModel().run('eth',"all", repeat_exp=3, max_seeds=3,dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f_all')
+    # RunModel().run('eth',"all", repeat_exp=3, max_seeds=3,dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f_all')
     # RunModel().run('eth',"bgnn", repeat_exp=3, max_seeds=3,dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f_bgnn')
 
     # RunModel().run('eth',"resgnn", repeat_exp=3, max_seeds=3,dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f_resgnn')
     # RunModel().run('eth',"catboost", repeat_exp=3, max_seeds=3,dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f_catboost')
     # RunModel().run('eth',"lightgbm", repeat_exp=3, max_seeds=3,dataset_dir='eth_dataset/d2_10node_10f',config_dir='bgnn/configs',save_folder='result/d2_10node_10f_lightgbm')
+    RunModel().run('eth',"bgnn", repeat_exp=3, max_seeds=3,dataset_dir='eth_dataset/all',config_dir='bgnn/configs',save_folder='result/all')
