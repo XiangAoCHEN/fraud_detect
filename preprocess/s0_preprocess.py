@@ -6,6 +6,10 @@ import numpy as np
 float64_max = np.finfo(np.float64).max
 int64_max = np.iinfo(np.int64).max
 
+input_node_file = '../eth_dataset/node_total.csv'
+input_edge_file = '../eth_dataset/edge_total.csv'
+new_node_file = '../eth_dataset/all/node_total_processed.csv'
+new_edge_file = '../eth_dataset/all/edge_total_processed.csv'
 
 # Load node and edge data
 # 0 account_id,fraud_label,
@@ -62,7 +66,7 @@ node_dtypes = {
     'transaction_interval': 'int64'
 }
 print("Loading node data...")
-node_df = dd.read_csv('../eth_dataset/node_total.csv', dtype=node_dtypes)
+node_df = dd.read_csv(input_node_file, dtype=node_dtypes)
 
 def check_integrity(df, name:str):
     print(f"Checking integrity of {name} data...")
@@ -238,7 +242,6 @@ if len(inf_columns) > 0 or len(minus_inf_columns) > 0 or len(na_columns) > 0:
     inf_columns, minus_inf_columns, na_columns = check_integrity(node_df, "node_df")
 
 # save the processed node data
-new_node_file = '../eth_dataset/all/node_total_processed.csv'
 node_df.to_csv(new_node_file, single_file=True, index=False)
 print("Node data saved to ", new_node_file)
 
@@ -268,7 +271,7 @@ edge_dtypes = {
 }
 print("loading edge csv")
 edge_df = dd.read_csv(
-    '../eth_dataset/edge_total.csv',
+    input_edge_file,
     names=columns,  # 手动指定列名
     dtype=edge_dtypes,
     header=None  # 指定文件没有列头
@@ -322,7 +325,7 @@ if len(inf_columns) > 0 or len(minus_inf_columns) > 0 or len(na_columns) > 0:
     inf_columns, minus_inf_columns, na_columns = check_integrity(edge_df, "edge_df")
 
 # save the processed edge data
-new_edge_file = '../eth_dataset/all/edge_total_processed.csv'
+
 edge_df.to_csv(new_edge_file, single_file=True, index=False)
 print("Edge data saved to ", new_edge_file)
 

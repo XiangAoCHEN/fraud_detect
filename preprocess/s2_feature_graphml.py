@@ -3,6 +3,9 @@ import dask.dataframe as dd
 import networkx as nx
 import numpy as np
 
+input_node_file = '../eth_dataset/all/node_total_processed.csv'
+input_edge_file = '../eth_dataset/all/edge_total_processed.csv'
+output_graphml_file = '../eth_dataset/all/graph.graphml'
 
 node_dtypes = {
     'account_id': 'object',# address
@@ -47,7 +50,7 @@ node_dtypes = {
     'transaction_interval': 'int64'
 }
 print("Loading node data...")
-node_df = dd.read_csv('../eth_dataset/all/node_total_processed.csv', dtype=node_dtypes)
+node_df = dd.read_csv(input_node_file, dtype=node_dtypes)
 
 edge_dtypes = {
     'txn_hash': 'object',
@@ -65,7 +68,7 @@ edge_dtypes = {
     'cumulative_gas_used': 'float64'
 }
 print("Loading edge data...")
-edge_df = dd.read_csv('../eth_dataset/edge_total.csv', dtype=edge_dtypes)
+edge_df = dd.read_csv(input_edge_file, dtype=edge_dtypes)
 
 # select features  
 # 0 account_id,fraud_label,
@@ -80,6 +83,11 @@ edge_df = dd.read_csv('../eth_dataset/edge_total.csv', dtype=edge_dtypes)
 # 34 in_degree,out_degree,total_degree,
 # 37 earliest_transaction,latest_transaction,transaction_interval
 node_columns = [2,4,6,8,34,35,36,37,38,39]
+# print selected column name
+all_columns = node_df.columns
+selected_features = [all_columns[i] for i in node_columns]
+print("Selected node features:")
+print(selected_features)
 
 
 # Define the relevant columns for edges
@@ -89,7 +97,12 @@ node_columns = [2,4,6,8,34,35,36,37,38,39]
 source_col = 5
 destination_col = 6
 edge_columns = [3, 7, 8]  # Adjusted to zero-indexed
-
+all_columns = edge_df.columns
+selected_features = [all_columns[i] for i in edge_columns]
+selected_features.append(all_columns[source_col])
+selected_features.append(all_columns[destination_col])
+print("Selected edge features:")
+print(selected_features)
 
 # Create a directed graph
 G = nx.DiGraph()
@@ -117,6 +130,6 @@ print("Adding edges to the graph...")
 edge_df.map_partitions(lambda df: df.apply(add_edges_to_graph, axis=1)).compute()
 
 # Save the graph to a GraphML file
-nx.write_graphml(G, '../eth_dataset/all/graph.graphml')
+nx.write_graphml(G, output_graphml_file)
 print("GraphML file saved")
 print("ok")
