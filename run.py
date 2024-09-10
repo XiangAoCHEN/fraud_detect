@@ -28,14 +28,20 @@ class RunModel:
     def read_input(self, input_folder):
         print("## input_folder:", input_folder)
         current_path = os.getcwd()
-        x_path = os.path.join(current_path, input_folder, 'x.csv')
-        y_path = os.path.join(current_path, input_folder, 'y.csv')
+        print("## read x.csv and y.csv")
+        x_path = os.path.join(current_path, input_folder, 'x.csv')# node feature
+        y_path = os.path.join(current_path, input_folder, 'y.csv')# node label
         self.X = pd.read_csv(x_path)
         self.y = pd.read_csv(y_path)
+        num_nodes_features = self.X.shape[0]
+        num_nodes_labels = self.y.shape[0]
 
         print("## read graphml")
         graph_path = os.path.join(current_path, input_folder, 'graph.graphml')
         networkx_graph = nx.read_graphml(graph_path)
+        num_nodes_graph = networkx_graph.number_of_nodes()
+        assert num_nodes_graph == num_nodes_features == num_nodes_labels, \
+            f"## error, node num is not same: graph={num_nodes_graph}, features={num_nodes_features}, labels={num_nodes_labels}"
         networkx_graph = nx.relabel_nodes(networkx_graph, {str(i): i for i in range(len(networkx_graph))})
         self.networkx_graph = networkx_graph
 

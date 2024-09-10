@@ -3,8 +3,12 @@ import dask.dataframe as dd
 import networkx as nx
 import numpy as np
 
+# s1 生成x.csv是node feature, s2 生成graphml 是gnn graph structure, 需要保证两者节点一致
+# 不能使用dask并行，避免乱序
+
 input_node_file = '../eth_dataset/all/node_total_processed.csv'
 input_edge_file = '../eth_dataset/all/edge_total_processed.csv'
+input_x_file = '../eth_dataset/all/x.csv'
 output_graphml_file = '../eth_dataset/all/graph.graphml'
 
 node_dtypes = {
@@ -50,7 +54,8 @@ node_dtypes = {
     'transaction_interval': 'int64'
 }
 print("Loading node data...")
-node_df = dd.read_csv(input_node_file, dtype=node_dtypes)
+# node_df = dd.read_csv(input_node_file, dtype=node_dtypes)
+node_df = pd.read_csv(input_node_file, dtype=node_dtypes)
 
 edge_dtypes = {
     'txn_hash': 'object',
@@ -68,7 +73,8 @@ edge_dtypes = {
     'cumulative_gas_used': 'float64'
 }
 print("Loading edge data...")
-edge_df = dd.read_csv(input_edge_file, dtype=edge_dtypes)
+# edge_df = dd.read_csv(input_edge_file, dtype=edge_dtypes)
+edge_df = pd.read_csv(input_edge_file, dtype=edge_dtypes)
 
 # select features  
 # 0 account_id,fraud_label,
@@ -84,10 +90,10 @@ edge_df = dd.read_csv(input_edge_file, dtype=edge_dtypes)
 # 37 earliest_transaction,latest_transaction,transaction_interval
 node_columns = [2,4,6,8,34,35,36,37,38,39]
 # print selected column name
-all_columns = node_df.columns
-selected_features = [all_columns[i] for i in node_columns]
+all_node_columns = node_df.columns
+selected_node_features = [all_node_columns[i] for i in node_columns]
 print("Selected node features:")
-print(selected_features)
+print(selected_node_features)
 
 
 # Define the relevant columns for edges
@@ -97,37 +103,63 @@ print(selected_features)
 source_col = 5
 destination_col = 6
 edge_columns = [3, 7, 8]  # Adjusted to zero-indexed
-all_columns = edge_df.columns
-selected_features = [all_columns[i] for i in edge_columns]
-selected_features.append(all_columns[source_col])
-selected_features.append(all_columns[destination_col])
+all_edge_columns = edge_df.columns
+selected_edge_features = [all_edge_columns[i] for i in edge_columns]
+selected_edge_features.append(all_edge_columns[source_col])
+selected_edge_features.append(all_edge_columns[destination_col])
 print("Selected edge features:")
-print(selected_features)
+print(selected_edge_features)
 
 # Create a directed graph
 G = nx.DiGraph()
 
 # Add nodes to the graph (excluding account_id and fraud_label from attributes)
-def add_nodes_to_graph(row):
+# def add_nodes_to_graph(row):
+#     node_id = row['account_id']
+#     label = row['fraud_label']
+#     attributes = {f'{col}': row.iloc[col] for col in node_columns}
+#     G.add_node(node_id, **attributes, label=label)
+
+# # Use Dask's map_partitions to apply the function across partitions
+# print("Adding nodes to the graph...")
+# node_df.map_partitions(lambda df: df.apply(add_nodes_to_graph, axis=1)).compute()
+for _, row in node_df.iterrows():
     node_id = row['account_id']
     label = row['fraud_label']
     attributes = {f'{col}': row.iloc[col] for col in node_columns}
     G.add_node(node_id, **attributes, label=label)
 
-# Use Dask's map_partitions to apply the function across partitions
-print("Adding nodes to the graph...")
-node_df.map_partitions(lambda df: df.apply(add_nodes_to_graph, axis=1)).compute()
+num_nodes_graph = G.number_of_nodes()
+print(" graph node num: ", num_nodes_graph)
+
+print("Reading x.csv...")
+x_df = pd.read_csv(input_x_file)
+num_nodes_x = x_df.shape[0]
+print(f"Number of nodes in x.csv: {num_nodes_x}")
+
+if num_nodes_x == num_nodes_graph:
+    print("The number of nodes in x.csv matches the number of nodes in the GraphML file.")
+else:
+    print("Error, mismatch detected:")
+    print(f"x.csv nodes: {num_nodes_x}")
+    print(f"GraphML nodes: {num_nodes_graph}")
+
 
 # Add edges to the graph with specified attributes
-def add_edges_to_graph(row):
-    source = row.iloc[source_col]
-    destination = row.iloc[destination_col]
+# def add_edges_to_graph(row):
+#     source = row.iloc[source_col]
+#     destination = row.iloc[destination_col]
+#     edge_attributes = {f'attr_{col}': row.iloc[col] for col in edge_columns}
+#     G.add_edge(source, destination, **edge_attributes)
+
+# # Use Dask's map_partitions to apply the function across partitions
+# print("Adding edges to the graph...")
+# edge_df.map_partitions(lambda df: df.apply(add_edges_to_graph, axis=1)).compute()
+for _, row in edge_df.iterrows():
+    source = row['from']
+    destination = row['to']
     edge_attributes = {f'attr_{col}': row.iloc[col] for col in edge_columns}
     G.add_edge(source, destination, **edge_attributes)
-
-# Use Dask's map_partitions to apply the function across partitions
-print("Adding edges to the graph...")
-edge_df.map_partitions(lambda df: df.apply(add_edges_to_graph, axis=1)).compute()
 
 # Save the graph to a GraphML file
 nx.write_graphml(G, output_graphml_file)
